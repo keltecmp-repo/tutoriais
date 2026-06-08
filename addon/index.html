@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Build KelTec Media'Play — Guia de Instalação</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Exo+2:wght@200;300;400;600;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-void:    #020406;
+  --bg-card:    #060d14;
+  --bg-deep:    #07111a;
+  --bg-panel:   #0b1826;
+  --gold:       #f0a500;
+  --gold-light: #ffd060;
+  --gold-dim:   #7a5200;
+  --cyan:       #00d4ff;
+  --cyan-dim:   #004d60;
+  --amber:      #ff6b00;
+  --green:      #00ff88;
+  --red:        #ff1744;
+  --violet:     #b44dff;
+  --blue:       #3a8eff;
+  --text:       #d8e4f0;
+  --muted:      #506070;
+  --faint:      #1e2e3e;
+  --gold-glow:  0 0 24px rgba(240,165,0,0.45), 0 0 80px rgba(240,165,0,0.12);
+  --cyan-glow:  0 0 24px rgba(0,212,255,0.45), 0 0 80px rgba(0,212,255,0.1);
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg-void);
+  color:var(--text);
+  font-family:'Exo 2',sans-serif;
+  font-weight:300;
+  overflow-x:hidden;
+  line-height:1.6;
+}
+
+/* ═══════════════════ ATMOSPHERIC FX ═══════════════════ */
+.atmo{
+  position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;
+}
+.atmo-blob{
+  position:absolute;border-radius:50%;filter:blur(120px);opacity:0.045;
+}
+.atmo-blob.b1{
+  width:800px;height:800px;top:-200px;left:-200px;
+  background:radial-gradient(circle,var(--gold),transparent 70%);
+  animation:blobDrift 30s ease-in-out infinite alternate;
+}
+.atmo-blob.b2{
+  width:600px;height:600px;bottom:-100px;right:-100px;
+  background:radial-gradient(circle,var(--cyan),transparent 70%);
+  animation:blobDrift 25s ease-in-out infinite alternate-reverse;
+}
+.atmo-blob.b3{
+  width:400px;height:400px;top:50%;left:50%;transform:translate(-50%,-50%);
+  background:radial-gradient(circle,var(--violet),transparent 70%);
+  animation:blobDrift 20s ease-in-out infinite alternate;
+  opacity:0.025;
+}
+@keyframes blobDrift{
+  from{transform:translate(0,0) scale(1);}
+  to{transform:translate(60px,40px) scale(1.15);}
+}
+
+/* scanlines */
+body::before{
+  content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.06) 2px,rgba(0,0,0,0.06) 4px);
+}
+
+/* ═══════════════════ PROGRESS BAR ═══════════════════ */
+#prog-wrap{position:fixed;top:0;left:0;right:0;height:3px;z-index:9990;background:rgba(255,255,255,0.03)}
+#prog{height:100%;width:0;background:linear-gradient(90deg,var(--gold),var(--amber),var(--gold));box-shadow:0 0 12px var(--gold);transition:width .1s linear}
+
+/* ═══════════════════ SIDE NAV ═══════════════════ */
+.sidenav{
+  position:fixed;right:20px;top:50%;transform:translateY(-50%);
+  display:flex;flex-direction:column;gap:10px;z-index:100;
+}
+.snav-dot{
+  width:10px;height:10px;border-radius:50%;
+  background:var(--faint);border:1px solid rgba(255,255,255,0.08);
+  cursor:pointer;transition:all .3s;position:relative;
+}
+.snav-dot::after{
+  content:attr(data-label);
+  position:absolute;right:20px;top:50%;transform:translateY(-50%);
+  background:var(--bg-panel);border:1px solid var(--faint);
+  color:var(--muted);font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:2px;
+  padding:4px 10px;border-radius:4px;white-space:nowrap;
+  opacity:0;pointer-events:none;transition:opacity .2s;
+}
+.snav-dot:hover::after{opacity:1}
+.snav-dot:hover,.snav-dot.active{background:var(--gold);box-shadow:var(--gold-glow);transform:scale(1.3)}
+
+/* ═══════════════════ WRAPPER ═══════════════════ */
+.wrap{
+  position:relative;z-index:1;
+  max-width:960px;margin:0 auto;padding:0 28px 100px;
+}
+
+/* ═══════════════════ HERO ═══════════════════ */
+.hero{
+  padding:90px 0 70px;text-align:center;position:relative;
+}
+.hero-rays{
+  position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:100%;height:100%;pointer-events:none;overflow:hidden;
+}
+.hero-rays::before{
+  content:'';position:absolute;top:40%;left:50%;transform:translate(-50%,-50%);
+  width:700px;height:700px;
+  background:conic-gradient(from 0deg,transparent 0deg 20deg,rgba(240,165,0,0.015) 20deg 22deg,transparent 22deg 40deg,rgba(240,165,0,0.01) 40deg 42deg,transparent 42deg 360deg);
+  animation:raysSpin 40s linear infinite;
+}
+@keyframes raysSpin{from{transform:translate(-50%,-50%) rotate(0deg)}to{transform:translate(-50%,-50%) rotate(360deg)}}
+
+.logo-shell{
+  display:inline-flex;flex-direction:column;align-items:center;
+  animation:heroIn 1.4s cubic-bezier(.16,1,.3,1) both;
+}
+@keyframes heroIn{from{opacity:0;transform:translateY(-50px) scale(.85)}to{opacity:1;transform:translateY(0) scale(1)}}
+
+.logo-orb{
+  width:150px;height:150px;border-radius:30px;
+  background:linear-gradient(145deg,#091828,#0f2238);
+  border:2px solid var(--gold);
+  box-shadow:var(--gold-glow),inset 0 0 60px rgba(240,165,0,0.06);
+  display:flex;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;
+}
+.logo-orb::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(240,165,0,0.1) 0%,transparent 55%);
+}
+.logo-orb::after{
+  content:'';position:absolute;
+  top:-50%;left:-50%;width:200%;height:200%;
+  background:conic-gradient(from 180deg,transparent 0deg 340deg,rgba(240,165,0,0.15) 340deg 360deg);
+  animation:orbSpin 6s linear infinite;
+}
+@keyframes orbSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+
+.logo-play{
+  font-size:70px;position:relative;z-index:1;
+  filter:drop-shadow(0 0 16px var(--gold));
+  animation:playthob 3s ease-in-out infinite;
+}
+@keyframes playthob{
+  0%,100%{filter:drop-shadow(0 0 16px var(--gold));}
+  50%{filter:drop-shadow(0 0 28px var(--gold)) drop-shadow(0 0 60px rgba(240,165,0,.4));}
+}
+
+.logo-rings{
+  position:absolute;inset:-35px;
+}
+.logo-rings span{
+  display:block;position:absolute;inset:0;border-radius:50%;
+  border:1px solid rgba(240,165,0,0.15);
+  animation:ringPulse 3.5s ease-in-out infinite;
+}
+.logo-rings span:nth-child(2){inset:-15px;border-color:rgba(240,165,0,0.08);animation-delay:.6s}
+.logo-rings span:nth-child(3){inset:-28px;border-color:rgba(240,165,0,0.04);animation-delay:1.2s}
+@keyframes ringPulse{0%,100%{transform:scale(1);opacity:.5}50%{transform:scale(1.04);opacity:1}}
+
+.logo-wordmark{
+  margin-top:26px;
+  font-family:'Bebas Neue',cursive;
+  font-size:clamp(40px,8vw,80px);
+  letter-spacing:5px;line-height:1;
+  background:linear-gradient(135deg,#c87800 0%,#f0a500 25%,#ffd060 50%,#f0a500 75%,#c87800 100%);
+  background-size:200%;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 0 20px rgba(240,165,0,.5));
+  animation:shimmerText 4s linear infinite;
+}
+@keyframes shimmerText{from{background-position:0%}to{background-position:200%}}
+
+.logo-eyebrow{
+  font-family:'Share Tech Mono',monospace;font-size:11px;
+  letter-spacing:7px;color:var(--cyan);
+  margin-top:10px;opacity:.7;text-transform:uppercase;
+}
+.logo-sub{
+  font-size:14px;color:var(--muted);letter-spacing:2px;
+  margin-top:6px;font-weight:200;
+}
+
+/* version badge */
+.ver-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  margin-top:20px;padding:7px 18px;
+  background:rgba(240,165,0,.07);
+  border:1px solid rgba(240,165,0,.2);border-radius:100px;
+  font-family:'Share Tech Mono',monospace;font-size:11px;
+  letter-spacing:3px;color:var(--gold);
+}
+.ver-dot{
+  width:6px;height:6px;border-radius:50%;
+  background:var(--green);box-shadow:0 0 8px var(--green);
+  animation:blink 1.5s ease-in-out infinite;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+
+/* spec chips */
+.specs{
+  display:flex;flex-wrap:wrap;justify-content:center;gap:10px;
+  margin-top:28px;
+}
+.spec-chip{
+  display:flex;align-items:center;gap:7px;
+  padding:6px 14px;
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.07);border-radius:100px;
+  font-family:'Share Tech Mono',monospace;font-size:10px;
+  letter-spacing:1.5px;color:var(--muted);
+  transition:all .25s;
+}
+.spec-chip:hover{border-color:rgba(240,165,0,.3);color:var(--gold);background:rgba(240,165,0,.05)}
+.spec-chip .si{font-size:13px}
+
+/* ═══════════════════ DIVIDER ═══════════════════ */
+.hdivider{
+  display:flex;align-items:center;gap:14px;
+  margin:50px 0 42px;
+  animation:fadeUp .7s .3s both;
+}
+.hdivider-line{flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(240,165,0,.35),transparent)}
+.hdivider-gem{width:8px;height:8px;background:var(--gold);transform:rotate(45deg);box-shadow:var(--gold-glow)}
+.hdivider-text{
+  font-family:'Share Tech Mono',monospace;font-size:10px;
+  letter-spacing:4px;color:var(--gold);opacity:.6;white-space:nowrap;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* ═══════════════════ STEP CARDS ═══════════════════ */
+.steps{display:flex;flex-direction:column;gap:30px}
+
+.scard{
+  background:var(--bg-card);
+  border:1px solid rgba(255,255,255,.05);
+  border-radius:20px;overflow:hidden;position:relative;
+  transition:border-color .3s,box-shadow .3s,transform .2s;
+  animation:slideIn .65s cubic-bezier(.16,1,.3,1) both;
+}
+.scard:nth-child(1){animation-delay:.05s}
+.scard:nth-child(2){animation-delay:.13s}
+.scard:nth-child(3){animation-delay:.21s}
+.scard:nth-child(4){animation-delay:.29s}
+.scard:nth-child(5){animation-delay:.37s}
+@keyframes slideIn{from{opacity:0;transform:translateX(-35px)}to{opacity:1;transform:translateX(0)}}
+
+.scard:hover{transform:translateX(4px)}
+.scard.c-gold:hover{border-color:rgba(240,165,0,.3);box-shadow:0 8px 60px rgba(0,0,0,.5),-4px 0 0 var(--gold)}
+.scard.c-cyan:hover{border-color:rgba(0,212,255,.3);box-shadow:0 8px 60px rgba(0,0,0,.5),-4px 0 0 var(--cyan)}
+.scard.c-amber:hover{border-color:rgba(255,107,0,.3);box-shadow:0 8px 60px rgba(0,0,0,.5),-4px 0 0 var(--amber)}
+.scard.c-violet:hover{border-color:rgba(180,77,255,.3);box-shadow:0 8px 60px rgba(0,0,0,.5),-4px 0 0 var(--violet)}
+.scard.c-blue:hover{border-color:rgba(58,142,255,.3);box-shadow:0 8px 60px rgba(0,0,0,.5),-4px 0 0 var(--blue)}
+
+/* color strip */
+.scard::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:4px 0 0 4px}
+.scard.c-gold::before{background:linear-gradient(180deg,var(--gold),#7a5200);box-shadow:3px 0 16px rgba(240,165,0,.4)}
+.scard.c-cyan::before{background:linear-gradient(180deg,var(--cyan),#006688);box-shadow:3px 0 16px rgba(0,212,255,.4)}
+.scard.c-amber::before{background:linear-gradient(180deg,var(--amber),#882200);box-shadow:3px 0 16px rgba(255,107,0,.4)}
+.scard.c-violet::before{background:linear-gradient(180deg,var(--violet),#5500aa);box-shadow:3px 0 16px rgba(180,77,255,.4)}
+.scard.c-blue::before{background:linear-gradient(180deg,var(--blue),#1a3a88);box-shadow:3px 0 16px rgba(58,142,255,.4)}
+
+/* ── CARD HEADER ── */
+.sc-head{
+  padding:26px 30px 22px 40px;
+  display:flex;align-items:center;gap:20px;
+  border-bottom:1px solid rgba(255,255,255,.04);
+  position:relative;
+}
+.sc-bignumber{
+  position:absolute;right:26px;top:50%;transform:translateY(-50%);
+  font-family:'Bebas Neue',cursive;font-size:72px;line-height:1;
+  letter-spacing:-3px;color:#fff;opacity:.04;user-select:none;
+}
+.sc-icon-wrap{
+  width:58px;height:58px;border-radius:15px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:27px;flex-shrink:0;
+}
+.c-gold   .sc-icon-wrap{background:rgba(240,165,0,.1);border:1px solid rgba(240,165,0,.25)}
+.c-cyan   .sc-icon-wrap{background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.2)}
+.c-amber  .sc-icon-wrap{background:rgba(255,107,0,.08);border:1px solid rgba(255,107,0,.2)}
+.c-violet .sc-icon-wrap{background:rgba(180,77,255,.08);border:1px solid rgba(180,77,255,.2)}
+.c-blue   .sc-icon-wrap{background:rgba(58,142,255,.08);border:1px solid rgba(58,142,255,.2)}
+
+.sc-titlewrap{flex:1}
+.sc-label{
+  font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:4px;margin-bottom:5px;
+}
+.c-gold   .sc-label{color:var(--gold)}
+.c-cyan   .sc-label{color:var(--cyan)}
+.c-amber  .sc-label{color:var(--amber)}
+.c-violet .sc-label{color:var(--violet)}
+.c-blue   .sc-label{color:var(--blue)}
+
+.sc-title{
+  font-family:'Bebas Neue',cursive;font-size:28px;letter-spacing:2px;
+  color:var(--text);line-height:1.1;
+}
+
+/* ── CARD BODY ── */
+.sc-body{padding:26px 30px 30px 40px}
+
+.sc-intro{
+  font-size:15px;color:var(--muted);margin-bottom:22px;
+  font-weight:300;line-height:1.75;
+  padding-left:14px;
+  border-left:2px solid rgba(255,255,255,.06);
+}
+
+/* ── SUB STEPS ── */
+.substeps{display:flex;flex-direction:column;gap:8px}
+
+.ss{
+  display:flex;align-items:flex-start;gap:14px;
+  padding:14px 18px;
+  background:var(--bg-panel);
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.04);
+  transition:background .25s,border-color .25s;
+  position:relative;overflow:hidden;cursor:default;
+}
+.ss::after{
+  content:'';position:absolute;left:0;top:0;bottom:0;
+  width:0;transition:width .35s ease;
+  pointer-events:none;
+}
+.c-gold   .ss::after{background:rgba(240,165,0,.04)}
+.c-cyan   .ss::after{background:rgba(0,212,255,.04)}
+.c-amber  .ss::after{background:rgba(255,107,0,.04)}
+.c-violet .ss::after{background:rgba(180,77,255,.04)}
+.c-blue   .ss::after{background:rgba(58,142,255,.04)}
+.ss:hover{background:rgba(255,255,255,.025)}
+.ss:hover::after{width:100%}
+
+.ss-n{
+  width:28px;height:28px;border-radius:7px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Share Tech Mono',monospace;font-size:11px;font-weight:700;
+  flex-shrink:0;margin-top:1px;position:relative;z-index:1;
+}
+.c-gold   .ss-n{background:rgba(240,165,0,.14);color:var(--gold)}
+.c-cyan   .ss-n{background:rgba(0,212,255,.12);color:var(--cyan)}
+.c-amber  .ss-n{background:rgba(255,107,0,.12);color:var(--amber)}
+.c-violet .ss-n{background:rgba(180,77,255,.12);color:var(--violet)}
+.c-blue   .ss-n{background:rgba(58,142,255,.12);color:var(--blue)}
+
+.ss-t{
+  font-size:15px;color:var(--text);line-height:1.55;font-weight:400;
+  position:relative;z-index:1;
+}
+.ss-t em{font-style:normal;font-weight:700}
+.c-gold   .ss-t em{color:var(--gold)}
+.c-cyan   .ss-t em{color:var(--cyan)}
+.c-amber  .ss-t em{color:var(--amber)}
+.c-violet .ss-t em{color:var(--violet)}
+.c-blue   .ss-t em{color:var(--blue)}
+
+/* ── URL BOX ── */
+.urlbox{
+  margin-top:18px;display:flex;
+  background:#020c14;
+  border:1px solid rgba(0,212,255,.22);border-radius:12px;overflow:hidden;
+  box-shadow:0 0 30px rgba(0,212,255,.04);
+}
+.urlbox-label{
+  padding:13px 16px;background:rgba(0,212,255,.07);
+  font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2.5px;
+  color:var(--cyan);border-right:1px solid rgba(0,212,255,.15);
+  white-space:nowrap;display:flex;align-items:center;
+}
+.urlbox-val{
+  padding:13px 16px;font-family:'Share Tech Mono',monospace;
+  font-size:13px;color:var(--cyan);flex:1;word-break:break-all;display:flex;align-items:center;
+}
+.urlbox-btn{
+  padding:13px 18px;background:rgba(0,212,255,.05);
+  border:none;border-left:1px solid rgba(0,212,255,.12);
+  color:var(--cyan);cursor:pointer;font-size:18px;
+  transition:background .2s;display:flex;align-items:center;
+}
+.urlbox-btn:hover{background:rgba(0,212,255,.18)}
+
+/* ── WARNING ── */
+.warn{
+  margin-top:20px;padding:16px 20px;
+  background:rgba(255,23,68,.05);border:1px solid rgba(255,23,68,.2);border-radius:12px;
+  display:flex;gap:14px;align-items:flex-start;
+}
+.warn-ic{font-size:22px;flex-shrink:0;margin-top:2px}
+.warn-body{font-size:14px;color:#ff6080;line-height:1.65}
+.warn-body strong{
+  display:block;margin-bottom:4px;
+  font-family:'Bebas Neue',cursive;font-size:17px;letter-spacing:1px;
+}
+
+/* ── FILE CHIP ── */
+.filechip{
+  display:flex;align-items:center;gap:14px;
+  padding:14px 20px;margin-top:18px;
+  background:rgba(255,107,0,.05);border:1px solid rgba(255,107,0,.2);border-radius:12px;
+}
+.filechip-icon{font-size:26px}
+.filechip-name{font-family:'Share Tech Mono',monospace;font-size:14px;color:var(--amber)}
+.filechip-note{font-size:12px;color:var(--muted);margin-top:2px}
+
+/* ── SUCCESS STRIP ── */
+.success{
+  margin-top:20px;padding:18px 22px;
+  background:rgba(0,255,136,.04);border:1px solid rgba(0,255,136,.18);border-radius:12px;
+  display:flex;align-items:center;gap:16px;
+}
+.success-ic{
+  width:46px;height:46px;border-radius:50%;
+  background:rgba(0,255,136,.08);border:1px solid rgba(0,255,136,.25);
+  display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;
+}
+.success-txt{font-size:16px;font-weight:600;color:var(--green);letter-spacing:.5px}
+.success-sub{font-size:13px;color:rgba(0,255,136,.45);margin-top:3px;font-weight:300}
+
+/* ── FEATURE TAGS (step 4) ── */
+.feature-tags{
+  display:flex;flex-wrap:wrap;gap:8px;margin-top:20px;
+}
+.ftag{
+  display:flex;align-items:center;gap:6px;
+  padding:5px 12px;border-radius:100px;font-size:12px;font-weight:600;letter-spacing:.5px;
+}
+.ftag.fv{background:rgba(180,77,255,.1);border:1px solid rgba(180,77,255,.25);color:var(--violet)}
+.ftag.fb{background:rgba(58,142,255,.1);border:1px solid rgba(58,142,255,.25);color:var(--blue)}
+.ftag.fg{background:rgba(0,255,136,.08);border:1px solid rgba(0,255,136,.2);color:var(--green)}
+.ftag.fa{background:rgba(240,165,0,.08);border:1px solid rgba(240,165,0,.2);color:var(--gold)}
+
+/* ── INFO BOX ── */
+.infobox{
+  margin-top:18px;padding:16px 20px;
+  background:rgba(58,142,255,.04);border:1px solid rgba(58,142,255,.15);border-radius:12px;
+}
+.infobox-title{
+  font-family:'Bebas Neue',cursive;font-size:16px;letter-spacing:1.5px;
+  color:var(--blue);margin-bottom:8px;
+}
+.infobox-body{font-size:14px;color:var(--muted);line-height:1.7}
+.infobox-body b{color:var(--text);font-weight:600}
+
+/* ═══════════════════ FINAL CARD ═══════════════════ */
+.final{
+  margin-top:40px;
+  background:linear-gradient(135deg,#07111e 0%,#0d1f30 50%,#07111e 100%);
+  border:1px solid rgba(240,165,0,.22);border-radius:22px;
+  padding:50px 40px;text-align:center;position:relative;overflow:hidden;
+  animation:slideIn .65s .45s cubic-bezier(.16,1,.3,1) both;
+}
+.final::before{
+  content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:65%;height:1px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);
+  box-shadow:0 0 25px rgba(240,165,0,.6);
+}
+.final::after{
+  content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);
+  width:35%;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(240,165,0,.4),transparent);
+}
+.final-ambient{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:400px;height:400px;border-radius:50%;
+  background:radial-gradient(circle,rgba(240,165,0,.07) 0%,transparent 70%);
+  pointer-events:none;
+}
+
+.final-icon{
+  font-size:60px;display:block;margin-bottom:18px;
+  animation:finalThob 2.5s ease-in-out infinite;
+}
+@keyframes finalThob{
+  0%,100%{filter:drop-shadow(0 0 10px rgba(240,165,0,.4));transform:scale(1)}
+  50%{filter:drop-shadow(0 0 25px rgba(240,165,0,.9));transform:scale(1.07)}
+}
+
+.final-title{
+  font-family:'Bebas Neue',cursive;
+  font-size:clamp(36px,6vw,56px);letter-spacing:4px;
+  background:linear-gradient(135deg,#f0a500,#ffd060,#f0a500);
+  background-size:200%;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 0 18px rgba(240,165,0,.45));
+  animation:shimmerText 4s linear infinite;
+  margin-bottom:14px;
+}
+.final-text{
+  font-size:16px;color:var(--muted);font-weight:300;
+  max-width:520px;margin:0 auto;line-height:1.8;
+}
+.final-badges{
+  display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:30px;
+}
+.fbadge{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:9px 22px;border-radius:100px;
+  font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:3px;
+}
+.fbadge.main{
+  background:rgba(240,165,0,.08);border:1px solid rgba(240,165,0,.3);color:var(--gold);
+}
+.fbadge.sec{
+  background:rgba(0,255,136,.06);border:1px solid rgba(0,255,136,.2);color:var(--green);
+}
+
+/* ═══════════════════ TOAST ═══════════════════ */
+#toast{
+  position:fixed;bottom:30px;left:50%;
+  transform:translateX(-50%) translateY(20px);
+  background:rgba(6,20,30,.95);
+  border:1px solid rgba(0,255,136,.3);
+  color:var(--green);
+  font-family:'Share Tech Mono',monospace;font-size:12px;letter-spacing:3px;
+  padding:12px 26px;border-radius:100px;opacity:0;pointer-events:none;
+  transition:all .35s;z-index:9000;
+  box-shadow:0 0 24px rgba(0,255,136,.15);
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ═══════════════════ RESPONSIVE ═══════════════════ */
+@media(max-width:640px){
+  .sc-head{flex-direction:column;align-items:flex-start;padding:20px 20px 18px 28px}
+  .sc-body{padding:20px 20px 24px 28px}
+  .sc-bignumber{display:none}
+  .sidenav{display:none}
+  .logo-wordmark{font-size:36px}
+  .specs{gap:6px}
+}
+</style>
+</head>
+<body>
+
+<div id="prog-wrap"><div id="prog"></div></div>
+
+<nav class="sidenav" id="sidenav">
+  <div class="snav-dot active" data-label="INÍCIO" onclick="gotoSec(0)"></div>
+  <div class="snav-dot" data-label="PASSO 1" onclick="gotoSec(1)"></div>
+  <div class="snav-dot" data-label="PASSO 2" onclick="gotoSec(2)"></div>
+  <div class="snav-dot" data-label="PASSO 3" onclick="gotoSec(3)"></div>
+  <div class="snav-dot" data-label="PASSO 4" onclick="gotoSec(4)"></div>
+  <div class="snav-dot" data-label="PASSO 5" onclick="gotoSec(5)"></div>
+</nav>
+
+<div class="atmo">
+  <div class="atmo-blob b1"></div>
+  <div class="atmo-blob b2"></div>
+  <div class="atmo-blob b3"></div>
+</div>
+
+<div id="toast">✓ URL COPIADA</div>
+
+<div class="wrap">
+
+  <!-- ══ HERO ══ -->
+  <section class="hero" id="sec-0">
+    <div class="hero-rays"></div>
+    <div class="logo-shell">
+      <div style="position:relative;display:inline-block">
+        <div class="logo-rings">
+          <span></span><span></span><span></span>
+        </div>
+        <div class="logo-orb">
+          <span class="logo-play">▶</span>
+        </div>
+      </div>
+      <div class="logo-wordmark">KelTec Media'Play</div>
+      <div class="logo-eyebrow">Build Installation Guide</div>
+      <div class="logo-sub">Xtream Codes · Proxy KPN Nativo · VIP JWT · TMDB Integrado</div>
+      <div class="ver-badge">
+        <span class="ver-dot"></span>
+        VERSÃO 3.0.0 · JUNHO 2026
+      </div>
+      <div class="specs">
+        <div class="spec-chip"><span class="si">🔐</span> VIP JWT Auth</div>
+        <div class="spec-chip"><span class="si">⚡</span> Proxy KPN Nativo</div>
+        <div class="spec-chip"><span class="si">🎬</span> TMDB pt-BR</div>
+        <div class="spec-chip"><span class="si">📡</span> 18+ Servidores</div>
+        <div class="spec-chip"><span class="si">🌐</span> DNS over HTTPS</div>
+        <div class="spec-chip"><span class="si">🔒</span> Controle Parental</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="hdivider">
+    <div class="hdivider-line"></div>
+    <div class="hdivider-gem"></div>
+    <span class="hdivider-text">Guia Passo a Passo de Instalação</span>
+    <div class="hdivider-gem"></div>
+    <div class="hdivider-line"></div>
+  </div>
+
+  <!-- ══ STEPS ══ -->
+  <div class="steps">
+
+    <!-- STEP 1 -->
+    <article class="scard c-gold" id="sec-1">
+      <div class="sc-head">
+        <div class="sc-icon-wrap">⚙️</div>
+        <div class="sc-titlewrap">
+          <div class="sc-label">PASSO 01 / 05</div>
+          <div class="sc-title">Ativar Fontes Desconhecidas</div>
+        </div>
+        <div class="sc-bignumber">01</div>
+      </div>
+      <div class="sc-body">
+        <p class="sc-intro">O Kodi bloqueia instalações de fontes não oficiais por padrão. É necessário liberar esta opção antes de qualquer instalação externa.</p>
+        <div class="substeps">
+          <div class="ss"><div class="ss-n">1</div><div class="ss-t">Na tela inicial, clique no ícone <em>⚙️ ENGRENAGEM</em> (Configurações)</div></div>
+          <div class="ss"><div class="ss-n">2</div><div class="ss-t">Selecione <em>SISTEMA</em></div></div>
+          <div class="ss"><div class="ss-n">3</div><div class="ss-t">Vá em <em>ADD-ONS</em></div></div>
+          <div class="ss"><div class="ss-n">4</div><div class="ss-t">Ative a opção <em>"FONTES DESCONHECIDAS"</em></div></div>
+        </div>
+        <div class="warn">
+          <span class="warn-ic">⚠️</span>
+          <div class="warn-body">
+            <strong>Atenção Importante</strong>
+            Ao ativar, clique em <b>SIM</b> para confirmar. Instale apenas de fontes confiáveis. O KelTec Media'Play possui sistema de <b>detecção de add-ons parasitas</b> para proteger suas credenciais.
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- STEP 2 -->
+    <article class="scard c-cyan" id="sec-2">
+      <div class="sc-head">
+        <div class="sc-icon-wrap">📁</div>
+        <div class="sc-titlewrap">
+          <div class="sc-label">PASSO 02 / 05</div>
+          <div class="sc-title">Adicionar Fonte no Gestor de Arquivos</div>
+        </div>
+        <div class="sc-bignumber">02</div>
+      </div>
+      <div class="sc-body">
+        <p class="sc-intro">Adicione o repositório oficial KelTec Media'Play como fonte no Gestor de Arquivos do Kodi para liberar a instalação.</p>
+        <div class="substeps">
+          <div class="ss"><div class="ss-n">1</div><div class="ss-t">Volte para a <em>tela inicial</em></div></div>
+          <div class="ss"><div class="ss-n">2</div><div class="ss-t">Clique em <em>⚙️ CONFIGURAÇÕES</em></div></div>
+          <div class="ss"><div class="ss-n">3</div><div class="ss-t">Selecione <em>GESTOR DE ARQUIVOS</em></div></div>
+          <div class="ss"><div class="ss-n">4</div><div class="ss-t">Clique em <em>"ADICIONAR FONTE"</em></div></div>
+          <div class="ss"><div class="ss-n">5</div><div class="ss-t">Digite ou cole o endereço oficial abaixo:</div></div>
+        </div>
+        <div class="urlbox">
+          <div class="urlbox-label">URL OFICIAL</div>
+          <div class="urlbox-val" id="repourl">https://keltecmp-repo.github.io/repo/</div>
+          <button class="urlbox-btn" onclick="copyUrl()" title="Copiar">📋</button>
+        </div>
+        <div class="substeps" style="margin-top:12px">
+          <div class="ss"><div class="ss-n">6</div><div class="ss-t">Dê o nome <em>KelTec Repo</em> à fonte</div></div>
+          <div class="ss"><div class="ss-n">7</div><div class="ss-t">Clique em <em>OK</em> para salvar</div></div>
+        </div>
+      </div>
+    </article>
+
+    <!-- STEP 3 -->
+    <article class="scard c-amber" id="sec-3">
+      <div class="sc-head">
+        <div class="sc-icon-wrap">📦</div>
+        <div class="sc-titlewrap">
+          <div class="sc-label">PASSO 03 / 05</div>
+          <div class="sc-title">Instalar o Repositório via ZIP</div>
+        </div>
+        <div class="sc-bignumber">03</div>
+      </div>
+      <div class="sc-body">
+        <p class="sc-intro">Com a fonte configurada, instale o repositório KelTec Media'Play a partir do arquivo ZIP oficial para liberar todos os add-ons.</p>
+        <div class="substeps">
+          <div class="ss"><div class="ss-n">1</div><div class="ss-t">Volte para a <em>tela inicial</em></div></div>
+          <div class="ss"><div class="ss-n">2</div><div class="ss-t">Clique em <em>ADD-ONS</em> (ícone de quebra-cabeça 🧩)</div></div>
+          <div class="ss"><div class="ss-n">3</div><div class="ss-t">Clique no ícone de <em>📦 CAIXA ABERTA</em> no topo da tela</div></div>
+          <div class="ss"><div class="ss-n">4</div><div class="ss-t">Selecione <em>"INSTALAR DO ARQUIVO ZIP"</em></div></div>
+          <div class="ss"><div class="ss-n">5</div><div class="ss-t">Escolha a fonte: <em>KelTec Repo</em></div></div>
+          <div class="ss"><div class="ss-n">6</div><div class="ss-t">Selecione o arquivo:</div></div>
+        </div>
+        <div class="filechip">
+          <span class="filechip-icon">🗜️</span>
+          <div>
+            <div class="filechip-name">repository.keltecmp-1.0.0.zip</div>
+            <div class="filechip-note">Arquivo oficial do repositório KelTec Media'Play</div>
+          </div>
+        </div>
+        <div class="substeps" style="margin-top:12px">
+          <div class="ss"><div class="ss-n">7</div><div class="ss-t">Aguarde a notificação de confirmação aparecer na tela</div></div>
+        </div>
+        <div class="success">
+          <div class="success-ic">✅</div>
+          <div>
+            <div class="success-txt">Repositório Instalado com Sucesso!</div>
+            <div class="success-sub">KelTec Media'Play Repository v3.0.0 pronto para uso</div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- STEP 4 — ADD-ON DE VÍDEO -->
+    <article class="scard c-violet" id="sec-4">
+      <div class="sc-head">
+        <div class="sc-icon-wrap">🎬</div>
+        <div class="sc-titlewrap">
+          <div class="sc-label">PASSO 04 / 05</div>
+          <div class="sc-title">Instalar o Add-on de Vídeo KelTec MP</div>
+        </div>
+        <div class="sc-bignumber">04</div>
+      </div>
+      <div class="sc-body">
+        <p class="sc-intro">Instale o add-on de vídeo principal — o coração do KelTec Media'Play com Proxy KPN Nativo, autenticação VIP JWT, TMDB integrado em pt-BR e suporte a 18+ servidores.</p>
+        <div class="substeps">
+          <div class="ss"><div class="ss-n">1</div><div class="ss-t">No menu <em>ADD-ONS</em>, clique em <em>"INSTALAR DO REPOSITÓRIO"</em></div></div>
+          <div class="ss"><div class="ss-n">2</div><div class="ss-t">Selecione: <em>KelTec Media'Play Repository</em></div></div>
+          <div class="ss"><div class="ss-n">3</div><div class="ss-t">Escolha a categoria: <em>🎬 ADD-ONS DE VÍDEO</em></div></div>
+          <div class="ss"><div class="ss-n">4</div><div class="ss-t">Selecione: <em>KelTec Media'Play Xtream</em></div></div>
+          <div class="ss"><div class="ss-n">5</div><div class="ss-t">Clique em <em>INSTALAR</em></div></div>
+          <div class="ss"><div class="ss-n">6</div><div class="ss-t">Aguarde a <em>instalação completa</em> — todas as dependências são automáticas</div></div>
+        </div>
+
+        <div class="feature-tags">
+          <span class="ftag fv">⚡ Proxy KPN Nativo</span>
+          <span class="ftag fv">🔐 VIP JWT</span>
+          <span class="ftag fb">🎬 TMDB pt-BR</span>
+          <span class="ftag fb">📡 18+ Servidores</span>
+          <span class="ftag fg">🌐 DNS over HTTPS</span>
+          <span class="ftag fg">🔒 Controle Parental</span>
+          <span class="ftag fa">📊 Painel ADM Online</span>
+          <span class="ftag fa">📝 Histórico Trakt</span>
+        </div>
+
+        <div class="infobox">
+          <div class="infobox-title">💡 Sem F4M Tester — Não é necessário</div>
+          <div class="infobox-body">
+            O KelTec Media'Play v3.0.0 inclui <b>Proxy KPN Nativo na porta 8088</b>. Se você tinha o F4M Tester ou KPN Tester instalados, pode removê-los sem impacto. O add-on detecta e usa seu próprio proxy automaticamente com três modos: <b>HLS Bridge, HLS Retry e TS Downloader</b>.
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- STEP 5 -->
+    <article class="scard c-blue" id="sec-5">
+      <div class="sc-head">
+        <div class="sc-icon-wrap">🚀</div>
+        <div class="sc-titlewrap">
+          <div class="sc-label">PASSO 05 / 05</div>
+          <div class="sc-title">Configurar e Curtir</div>
+        </div>
+        <div class="sc-bignumber">05</div>
+      </div>
+      <div class="sc-body">
+        <p class="sc-intro">Última etapa! Configure suas credenciais VIP e aproveite o melhor sistema de streaming para Kodi com proxy nativo, metadados TMDB e muito mais.</p>
+        <div class="substeps">
+          <div class="ss"><div class="ss-n">1</div><div class="ss-t">Abra o <em>KelTec Media'Play Xtream</em> em Add-ons de Vídeo</div></div>
+          <div class="ss"><div class="ss-n">2</div><div class="ss-t">Acesse <em>⚙️ Configurações</em> e insira suas <em>credenciais VIP</em> (usuário e senha)</div></div>
+          <div class="ss"><div class="ss-n">3</div><div class="ss-t">O sistema irá autenticar via <em>JWT seguro</em> e liberar os servidores do seu plano</div></div>
+          <div class="ss"><div class="ss-n">4</div><div class="ss-t">Opcional: configure sua <em>API Key TMDB gratuita</em> em themoviedb.org para metadados em pt-BR</div></div>
+          <div class="ss"><div class="ss-n">5</div><div class="ss-t">Ao reproduzir um canal ao vivo, selecione o modo de proxy: <em>HLS Bridge</em> (recomendado)</div></div>
+          <div class="ss"><div class="ss-n">6</div><div class="ss-t">Explore filmes, séries, TV ao vivo, EPG e catálogos TMDB — <em>tudo em português!</em> 🎉</div></div>
+        </div>
+        <div class="infobox" style="background:rgba(240,165,0,.04);border-color:rgba(240,165,0,.15);margin-top:18px">
+          <div class="infobox-title" style="color:var(--gold)">🌟 Recursos Exclusivos Desbloqueados</div>
+          <div class="infobox-body">
+            <b>Proxy KPN Nativo</b> · HLS Bridge sem rebobinamento · <b>Multi-servidor remoto</b> com fallback automático · <b>Histórico e Trakt.tv</b> · Controle Parental por PIN · Visualização automática Poster/Lista · Painel ADM com Online Agora em tempo real.
+          </div>
+        </div>
+      </div>
+    </article>
+
+  </div><!-- /steps -->
+
+  <!-- ══ FINAL ══ -->
+  <div class="final">
+    <div class="final-ambient"></div>
+    <span class="final-icon">🎬</span>
+    <div class="final-title">Pronto para Assistir!</div>
+    <p class="final-text">
+      O KelTec Media'Play Xtream está instalado e configurado. Desfrute de filmes, séries e TV ao vivo com proxy nativo, metadados TMDB em pt-BR e autenticação VIP segura.
+    </p>
+    <div class="final-badges">
+      <div class="fbadge main">
+        <span class="ver-dot"></span>
+        KELTEC MEDIA'PLAY v3.0.0
+      </div>
+      <div class="fbadge sec">
+        <span style="width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);display:inline-block"></span>
+        SISTEMA ONLINE &amp; ATIVO
+      </div>
+    </div>
+  </div>
+
+</div><!-- /wrap -->
+
+<script>
+// ── Progress bar ──
+window.addEventListener('scroll',()=>{
+  const h=document.documentElement;
+  const pct=(h.scrollTop/(h.scrollHeight-h.clientHeight))*100;
+  document.getElementById('prog').style.width=pct+'%';
+
+  // nav dots
+  const secs=[0,1,2,3,4,5].map(i=>document.getElementById('sec-'+i));
+  const dots=document.querySelectorAll('.snav-dot');
+  let active=0;
+  secs.forEach((s,i)=>{if(s&&s.getBoundingClientRect().top<=window.innerHeight*.45)active=i});
+  dots.forEach((d,i)=>d.classList.toggle('active',i===active));
+});
+
+function gotoSec(i){
+  const el=document.getElementById('sec-'+i);
+  if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function copyUrl(){
+  const url=document.getElementById('repourl').textContent;
+  navigator.clipboard.writeText(url).then(()=>{
+    const t=document.getElementById('toast');
+    t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'),2200);
+  });
+}
+</script>
+</body>
+</html>
